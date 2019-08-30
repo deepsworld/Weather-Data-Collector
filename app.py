@@ -1,24 +1,31 @@
 # Required imports
-from pymongo import MongoClient
-from config import config_values
-import pandas as pd
+import threading
+from func import start_main, fetch_five_day_forecast
 
-# Plotting Library
-import matplotlib
-matplotlib.use('Agg') # backend for writing graphs to a file. 
-import matplotlib.pyplot as plt
+# Threading class to run different activities on different threads. 
+class myThread(threading.Thread):
+    def __init__(self, type):
+        threading.Thread.__init__(self)
+        self.type = type
 
-# Connect to MongoDB server via client
-client = MongoClient()
-db = client.test
+    def run(self):
+        start_main(self.type)
 
-# Collections
-five_day_forecast = db.five_day_forecast # 5 days/3 hour forecast
-sixteen_day_forecast = db.sixteen_day_forecast # 16 days/daily forecast
-weather_maps = db.weather_maps # weather maps
+if __name__ == "__main__":
+    try:
+        # Three different threads for 3 tasks. 
+        t1 = myThread('five_days')
+        t1.start()
+        t2 = myThread('sixteen_days')
+        t2.start()
+        t3 = myThread('weather_maps')
+        t3.start()
 
+        # the main thread will stop executing until the execution of joined thread is complete
+        t1.join()
+        t2.join()
+        t3.join()
 
-
-
-
-
+        fetch_five_day_forecast()
+    except IOError as e:
+        print(repr(e)) # printable representation of e object
